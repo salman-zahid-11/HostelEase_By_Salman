@@ -1,0 +1,4 @@
+/* Custom styles for warden complaint details component */
+.timeline-dot {
+  transition: all 0.3s ease;
+}

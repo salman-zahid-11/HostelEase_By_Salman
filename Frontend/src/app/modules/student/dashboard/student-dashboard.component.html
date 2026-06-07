@@ -1,0 +1,125 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-indigo-600">HostelEase</h1>
+        <p class="text-gray-600 text-sm">Student Dashboard</p>
+      </div>
+
+
+
+      
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Card -->
+    <div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-lg shadow-lg p-6 mb-8">
+      <h2 class="text-2xl font-bold mb-2">Welcome, {{ user?.fullName }}!</h2>
+      <p class="text-indigo-100">
+        📍 Block: {{ user?.studentDetails?.block }} | Room: {{ user?.studentDetails?.roomNumber }}
+      </p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
+        <div class="text-gray-600 text-sm font-semibold">Total Complaints</div>
+        <div class="text-3xl font-bold text-blue-600 mt-2">{{ stats.total }}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
+        <div class="text-gray-600 text-sm font-semibold">Pending</div>
+        <div class="text-3xl font-bold text-yellow-500 mt-2">{{ stats.pending }}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
+        <div class="text-gray-600 text-sm font-semibold">In Progress</div>
+        <div class="text-3xl font-bold text-orange-500 mt-2">{{ stats.inProgress }}</div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-600">
+        <div class="text-gray-600 text-sm font-semibold">Resolved</div>
+        <div class="text-3xl font-bold text-green-600 mt-2">{{ stats.resolved }}</div>
+      </div>
+    </div>
+
+    <!-- Create Complaint Button -->
+    <div class="mb-8">
+      <button
+        (click)="createComplaint()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center gap-2"
+      >
+        + Report New Issue
+      </button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex gap-2 mb-6 border-b border-gray-200">
+      <button
+        *ngFor="let tab of ['all', 'pending', 'in_progress', 'resolved']"
+        (click)="filterComplaints(tab)"
+        [class.border-b-2]="selectedFilter === tab"
+        [class.border-indigo-600]="selectedFilter === tab"
+        class="px-4 py-2 font-medium text-gray-700 hover:text-indigo-600 transition"
+      >
+        {{ tab === 'all' ? 'All' : tab.replace('_', ' ') | titlecase }}
+      </button>
+    </div>
+
+    <!-- Complaints List -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+    </div>
+
+    <div *ngIf="!isLoading && complaints.length === 0" class="bg-white rounded-lg shadow p-12 text-center">
+      <p class="text-gray-500 text-lg">No complaints found</p>
+    </div>
+
+    <div *ngIf="!isLoading && complaints.length > 0" class="bg-white rounded-lg shadow overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-gray-100 border-b border-gray-200">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">ID</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Title</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Category</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Urgency</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <tr *ngFor="let complaint of complaints" class="hover:bg-gray-50 transition">
+            <td class="px-6 py-4 text-sm font-semibold text-indigo-600">{{ complaint.complaintId }}</td>
+            <td class="px-6 py-4 text-sm">{{ complaint.title }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ complaint.category | titlecase }}</td>
+            <td class="px-6 py-4 text-sm">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                [class]="complaint.urgency === 'emergency' ? 'bg-red-100 text-red-800' :
+                         complaint.urgency === 'high' ? 'bg-orange-100 text-orange-800' :
+                         complaint.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                         'bg-green-100 text-green-800'">
+                {{ complaint.urgency | titlecase }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <span class="px-3 py-1 rounded-full text-xs font-semibold" [class]="getStatusColor(complaint.status)">
+                {{ complaint.status.replace('_', ' ') | titlecase }}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-gray-600">
+              {{ complaint.createdAt | date: 'MMM dd, yyyy' }}
+            </td>
+            <td class="px-6 py-4 text-sm">
+              <button
+                (click)="viewComplaintDetails(complaint._id)"
+                class="text-indigo-600 hover:text-indigo-800 font-semibold transition"
+              >
+                View →
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>

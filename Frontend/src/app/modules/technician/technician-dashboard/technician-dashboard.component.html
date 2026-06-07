@@ -1,0 +1,417 @@
+<div class="tech-app">
+
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner">
+    <div class="banner-content">
+      <div class="banner-text">
+        <div class="banner-greeting">Good day, {{ currentUser?.fullName }}! 👋</div>
+        <div class="banner-role">Maintenance Technician · {{ currentUser?.department }}</div>
+      </div>
+      <div class="banner-stats">
+        <div class="stat-pill pending">
+          <span class="stat-num">{{ pendingComplaints }}</span>
+          <span class="stat-lbl">Pending</span>
+        </div>
+        <div class="stat-pill resolved">
+          <span class="stat-num">{{ resolvedComplaints }}</span>
+          <span class="stat-lbl">Resolved</span>
+        </div>
+        <div class="stat-pill total">
+          <span class="stat-num">{{ complaints.length }}</span>
+          <span class="stat-lbl">Total</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+
+    <!-- Section Header -->
+    <div class="section-header">
+      <div class="section-title">
+        <span class="section-icon">📋</span>
+        Assigned Tasks
+      </div>
+      <button class="refresh-btn" (click)="refreshComplaints()" [class.spinning]="isLoading">
+        <span class="refresh-icon">↻</span>
+        {{ isLoading ? 'Refreshing...' : 'Refresh' }}
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading">
+      <div class="loader"></div>
+      <p>Loading your tasks...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && complaints.length === 0">
+      <div class="empty-icon">🎉</div>
+      <div class="empty-title">All Clear!</div>
+      <div class="empty-sub">No tasks assigned yet. Check back later.</div>
+    </div>
+
+    <!-- Complaint Cards -->
+    <div class="cards-list" *ngIf="!isLoading && complaints.length > 0">
+      <div class="complaint-card" *ngFor="let c of complaints" [class.resolved]="c.status === 'resolved'">
+
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="card-left">
+            <div class="urgency-dot" [class]="c.urgencyLevel"></div>
+            <div class="card-title">{{ c.title }}</div>
+          </div>
+          <div class="status-badge" [class]="c.status">
+            {{ getStatusLabel(c.status) }}
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <p class="card-desc">{{ c.description }}</p>
+
+
+          
+          <div class="card-meta">
+  <!-- Block & Room -->
+  <div class="meta-item">
+    <span class="meta-icon">🏠</span>
+    <span>
+      Block: {{ c.location?.block || c.studentId?.studentDetails?.block || 'N/A' }}
+      · Room: {{ c.location?.roomNumber || c.studentId?.studentDetails?.roomNumber || 'N/A' }}
+    </span>
+  </div>
+
+  <!-- Urgency -->
+  <div class="meta-item">
+    <span class="meta-icon">⚡</span>
+    <span class="urgency-text" [class]="c.urgency || c.urgencyLevel">
+      {{ (c.urgency || c.urgencyLevel) | titlecase }}
+    </span>
+  </div>
+
+  <!-- Student Name -->
+  <div class="meta-item">
+    <span class="meta-icon">👤</span>
+    <span>{{ c.studentId?.fullName || 'Student' }}</span>
+  </div>
+
+  <!-- Student Phone -->
+  <div class="meta-item">
+    <span class="meta-icon">📞</span>
+    <span>{{ c.studentId?.phoneNumber || 'N/A' }}</span>
+  </div>
+
+  <!-- Category -->
+  <div class="meta-item">
+    <span class="meta-icon">🔧</span>
+    <span>{{ c.category | titlecase }}</span>
+  </div>
+
+  <!-- Date -->
+  <div class="meta-item">
+    <span class="meta-icon">📅</span>
+    <span>{{ c.createdAt | date:'MMM d, y' }}</span>
+  </div>
+</div>
+
+<!-- Complaint Images -->
+<div class="complaint-images" *ngIf="c.images && c.images.length > 0">
+  <div class="images-label">📷 Attached Photos ({{ c.images.length }})</div>
+  <div class="images-row">
+    <div class="img-thumb" *ngFor="let img of c.images" (click)="openImage(img)">
+      <img [src]="img" alt="Complaint photo"
+           onerror="this.style.display='none'"
+           style="width:100%; height:100%; object-fit:cover; border-radius:8px;"/>
+      <div class="img-overlay">🔍 View</div>
+    </div>
+  </div>
+</div>
+
+<!-- Full Image Viewer Modal -->
+<div class="img-modal" *ngIf="selectedImage" (click)="closeImage()">
+  <div class="modal-inner" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="closeImage()">✕</button>
+    <img [src]="selectedImage" alt="Full view"
+         style="max-width:100%; max-height:80vh; border-radius:12px;"/>
+  </div>
+</div>
+
+
+
+        </div>
+
+        <!-- Card Actions -->
+        <div class="card-actions" *ngIf="c.status !== 'resolved'">
+          <button class="action-btn inprogress"
+            *ngIf="c.status === 'assigned'"
+            (click)="updateStatus(c._id, 'in-progress', c)">
+            🔄 Start Working
+          </button>
+          <button class="action-btn resolve"
+            *ngIf="c.status === 'in-progress' || c.status === 'assigned'"
+            (click)="updateStatus(c._id, 'resolved', c)">
+            ✅ Mark Resolved
+          </button>
+        </div>
+
+        <!-- Resolved Banner -->
+        <div class="resolved-banner" *ngIf="c.status === 'resolved'">
+          ✅ Task completed · Warden has been notified
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+.tech-app {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f0f4ff;
+  min-height: 100vh;
+}
+
+/* TOP BAR */
+.top-bar {
+  background: #1e1b4b;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.top-bar-left { display: flex; align-items: center; gap: 10px; }
+.logo-mark { font-size: 22px; }
+.app-name { color: white; font-weight: 700; font-size: 16px; }
+.app-sub { color: #a5b4fc; font-size: 11px; }
+.top-bar-right { display: flex; align-items: center; gap: 10px; }
+.user-chip {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1);
+  padding: 6px 12px; border-radius: 20px;
+}
+.user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #6366f1; color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+}
+.user-name { color: white; font-size: 13px; }
+.signout-btn {
+  background: rgba(239,68,68,0.2); color: #fca5a5;
+  border: 1px solid rgba(239,68,68,0.3);
+  padding: 6px 14px; border-radius: 8px;
+  cursor: pointer; font-size: 13px;
+}
+
+/* WELCOME BANNER */
+.welcome-banner {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  padding: 24px 20px;
+}
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.banner-greeting { color: white; font-size: 20px; font-weight: 700; }
+.banner-role { color: #c7d2fe; font-size: 13px; margin-top: 4px; }
+.banner-stats { display: flex; gap: 10px; }
+.stat-pill {
+  flex: 1; background: rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 12px 8px;
+  text-align: center; backdrop-filter: blur(4px);
+}
+.stat-num { display: block; color: white; font-size: 24px; font-weight: 800; }
+.stat-lbl { color: rgba(255,255,255,0.75); font-size: 11px; }
+
+/* MAIN CONTENT */
+.main-content { padding: 16px; }
+
+/* SECTION HEADER */
+.section-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 14px;
+}
+.section-title {
+  font-size: 16px; font-weight: 700;
+  color: #1e1b4b; display: flex; align-items: center; gap: 6px;
+}
+.section-icon { font-size: 18px; }
+.refresh-btn {
+  background: white; border: 1px solid #e0e7ff;
+  color: #4f46e5; padding: 7px 14px;
+  border-radius: 8px; cursor: pointer;
+  font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px;
+}
+.refresh-icon { font-size: 16px; display: inline-block; }
+.spinning .refresh-icon { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* LOADING */
+.loading-state {
+  text-align: center; padding: 60px 20px; color: #6b7280;
+}
+.loader {
+  width: 36px; height: 36px; border: 3px solid #e0e7ff;
+  border-top-color: #4f46e5; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  background: white; border-radius: 16px;
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 18px; font-weight: 700; color: #1e1b4b; }
+.empty-sub { color: #9ca3af; font-size: 14px; margin-top: 6px; }
+
+/* CARDS */
+.cards-list { display: flex; flex-direction: column; gap: 12px; }
+
+.complaint-card {
+  background: white; border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden;
+  border-left: 4px solid #6366f1;
+  transition: transform 0.2s;
+}
+.complaint-card.resolved { border-left-color: #10b981; opacity: 0.85; }
+.complaint-card:active { transform: scale(0.99); }
+
+.card-header {
+  padding: 14px 16px 8px;
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+}
+.card-left { display: flex; align-items: center; gap: 8px; flex: 1; }
+.urgency-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.urgency-dot.low { background: #10b981; }
+.urgency-dot.medium { background: #f59e0b; }
+.urgency-dot.high { background: #ef4444; }
+.urgency-dot.emergency { background: #7c2d12; }
+
+.card-title { font-weight: 700; color: #1e1b4b; font-size: 15px; line-height: 1.3; }
+
+.status-badge {
+  font-size: 11px; font-weight: 600; padding: 3px 10px;
+  border-radius: 20px; white-space: nowrap; flex-shrink: 0;
+}
+.status-badge.assigned { background: #e0e7ff; color: #4338ca; }
+.status-badge.in-progress { background: #fef3c7; color: #d97706; }
+.status-badge.resolved { background: #d1fae5; color: #059669; }
+.status-badge.pending { background: #f3f4f6; color: #6b7280; }
+
+.card-body { padding: 0 16px 12px; }
+.card-desc { color: #6b7280; font-size: 13px; line-height: 1.5; margin-bottom: 10px; }
+
+.card-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.meta-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #6b7280; }
+.meta-icon { font-size: 13px; }
+.urgency-text.low { color: #10b981; font-weight: 600; }
+.urgency-text.medium { color: #f59e0b; font-weight: 600; }
+.urgency-text.high { color: #ef4444; font-weight: 600; }
+.urgency-text.emergency { color: #7c2d12; font-weight: 600; }
+
+.card-actions { padding: 0 16px 14px; display: flex; gap: 8px; }
+.action-btn {
+  flex: 1; padding: 10px; border: none;
+  border-radius: 10px; font-size: 13px;
+  font-weight: 600; cursor: pointer;
+}
+.action-btn.inprogress { background: #fef3c7; color: #d97706; }
+.action-btn.resolve { background: #d1fae5; color: #059669; }
+.action-btn:active { opacity: 0.8; transform: scale(0.98); }
+
+.resolved-banner {
+  background: #d1fae5; color: #059669;
+  padding: 10px 16px; font-size: 13px; font-weight: 600;
+  text-align: center;
+}
+
+
+
+
+/* Images */
+.complaint-images {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+.images-label {
+  font-size: 12px; color: #6b7280;
+  margin-bottom: 8px; font-weight: 600;
+}
+.images-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.img-thumb {
+  width: 72px; height: 72px;
+  border-radius: 8px; overflow: hidden;
+  cursor: pointer; position: relative;
+  border: 2px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.img-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.4);
+  color: white; font-size: 11px;
+  display: flex; align-items: center;
+  justify-content: center;
+  opacity: 0; transition: 0.2s;
+}
+.img-thumb:hover .img-overlay { opacity: 1; }
+
+/* Modal */
+.img-modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  display: flex; align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-inner {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  max-width: 90vw;
+}
+.modal-close {
+  position: absolute; top: -12px; right: -12px;
+  width: 32px; height: 32px;
+  border-radius: 50%; border: none;
+  background: #ef4444; color: white;
+  font-size: 14px; cursor: pointer;
+  display: flex; align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+
+
+
+
+/* Responsive for tablet/desktop */
+@media (min-width: 640px) {
+  .banner-content { flex-direction: row; justify-content: space-between; align-items: center; }
+  .banner-stats { gap: 14px; }
+  .stat-pill { min-width: 80px; }
+  .cards-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .main-content { padding: 20px; max-width: 900px; margin: 0 auto; }
+}
+</style>

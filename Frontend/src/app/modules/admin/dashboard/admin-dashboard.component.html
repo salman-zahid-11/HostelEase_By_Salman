@@ -1,0 +1,273 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-extrabold text-indigo-600 tracking-tight">HostelEase</h1>
+        <p class="text-gray-500 text-sm font-medium">Administrator Console</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+          Super Admin: {{ user?.fullName }}
+        </span>
+        <button
+          (click)="logout()"
+          class="px-4 py-2 bg-red-600 text-white font-bold text-sm rounded-lg hover:bg-red-700 transition"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Card -->
+    <div class="bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl shadow-lg p-6 md:p-8 mb-8">
+      <h2 class="text-2xl md:text-3xl font-bold mb-2">Welcome Back, Administrator!</h2>
+      <p class="text-indigo-100 text-sm md:text-base max-w-xl">
+        Manage wardens, approve registrations, assign boys/girls/staff hostel authorities, and monitor all maintenance complaints.
+      </p>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex gap-4 mb-8 border-b border-gray-200">
+      <button
+        (click)="activeTab = 'wardens'"
+        [class.border-b-2]="activeTab === 'wardens'"
+        [class.border-indigo-600]="activeTab === 'wardens'"
+        [class.text-indigo-600]="activeTab === 'wardens'"
+        class="px-4 py-2 font-bold text-gray-500 hover:text-indigo-600 transition duration-200"
+      >
+        Warden & Hostels
+      </button>
+      <button
+        (click)="activeTab = 'approvals'"
+        [class.border-b-2]="activeTab === 'approvals'"
+        [class.border-indigo-600]="activeTab === 'approvals'"
+        [class.text-indigo-600]="activeTab === 'approvals'"
+        class="px-4 py-2 font-bold text-gray-500 hover:text-indigo-600 transition duration-200 flex items-center gap-2"
+      >
+        Pending Approvals
+        <span *ngIf="pendingUsers.length > 0" class="px-2 py-0.5 bg-red-500 text-white rounded-full text-xs font-bold">
+          {{ pendingUsers.length }}
+        </span>
+      </button>
+      <button
+        (click)="activeTab = 'complaints'"
+        [class.border-b-2]="activeTab === 'complaints'"
+        [class.border-indigo-600]="activeTab === 'complaints'"
+        [class.text-indigo-600]="activeTab === 'complaints'"
+        class="px-4 py-2 font-bold text-gray-500 hover:text-indigo-600 transition duration-200"
+      >
+        All Complaints
+      </button>
+    </div>
+
+    <!-- Wardens & Hostels Tab -->
+    <div *ngIf="activeTab === 'wardens'">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+          <h3 class="text-lg font-bold text-gray-900">Registered Wardens & Authorities</h3>
+          <button (click)="loadWardens()" class="text-xs font-bold text-indigo-600 hover:underline">
+            Refresh List
+          </button>
+        </div>
+
+        <div *ngIf="isLoadingUsers" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+        </div>
+
+        <div *ngIf="!isLoadingUsers && wardens.length === 0" class="p-12 text-center">
+          <p class="text-gray-500 font-medium">No registered wardens found.</p>
+        </div>
+
+        <div *ngIf="!isLoadingUsers && wardens.length > 0" class="divide-y divide-gray-100">
+          <div *ngFor="let warden of wardens" class="p-6 hover:bg-gray-50/50 transition">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              
+              <!-- Warden Information -->
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg">
+                  {{ warden.fullName.charAt(0) }}
+                </div>
+                <div class="space-y-1">
+                  <h4 class="font-bold text-gray-900 text-base">{{ warden.fullName }}</h4>
+                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
+                    <span>✉ {{ warden.email }}</span>
+                    <span>📞 {{ warden.phoneNumber }}</span>
+                    <span>Emp ID: <span class="font-bold text-gray-700">{{ warden.wardenDetails?.employeeId || 'N/A' }}</span></span>
+                  </div>
+                  <p class="text-xs text-gray-400">Department: {{ warden.department }}</p>
+                </div>
+              </div>
+
+              <!-- Hostel Assignment Controls -->
+              <div class="flex items-center gap-3">
+                <div class="space-y-1">
+                  <label [for]="'hostel-' + warden._id" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                    Hostel Assignment
+                  </label>
+                  <div class="flex gap-2">
+                    <select
+                      [id]="'hostel-' + warden._id"
+                      [(ngModel)]="warden.wardenDetails.hostelAssignment"
+                      class="px-3 py-2 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+                    >
+                      <option value="none">None (Unassigned)</option>
+                      <option value="boys">Boys Hostel</option>
+                      <option value="girls">Girls Hostel</option>
+                      <option value="staff">Staff Hostel</option>
+                    </select>
+                    <button
+                      (click)="updateWardenHostel(warden)"
+                      class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-sm transition animate-hover"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending Approvals Tab -->
+    <div *ngIf="activeTab === 'approvals'">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+          <h3 class="text-lg font-bold text-gray-900">Approvals Awaiting Review</h3>
+          <button (click)="loadPendingApprovals()" class="text-xs font-bold text-indigo-600 hover:underline">
+            Refresh
+          </button>
+        </div>
+
+        <div *ngIf="isLoadingApprovals" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+        </div>
+
+        <div *ngIf="!isLoadingApprovals && pendingUsers.length === 0" class="p-12 text-center">
+          <p class="text-gray-500 font-medium">No registrations pending approval.</p>
+        </div>
+
+        <div *ngIf="!isLoadingApprovals && pendingUsers.length > 0" class="divide-y divide-gray-100">
+          <div *ngFor="let user of pendingUsers" class="p-6 hover:bg-gray-50/50 transition">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              
+              <!-- User Details -->
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-lg">
+                  {{ user.fullName.charAt(0) }}
+                </div>
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-gray-900 text-base">{{ user.fullName }}</h4>
+                    <span class="px-2 py-0.5 bg-violet-50 text-violet-700 text-xs font-bold rounded uppercase tracking-wider">
+                      {{ user.role }}
+                    </span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500 font-medium">
+                    <span>✉ {{ user.email }}</span>
+                    <span>📞 {{ user.phoneNumber }}</span>
+                    <span>Dept: {{ user.department }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Approve / Reject Actions -->
+              <div class="flex items-center gap-2">
+                <button
+                  (click)="approveUser(user._id)"
+                  class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-sm rounded-xl shadow-sm transition"
+                >
+                  Approve
+                </button>
+                <button
+                  (click)="rejectUser(user._id)"
+                  class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-sm rounded-xl transition"
+                >
+                  Reject
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- All Complaints Tab -->
+    <div *ngIf="activeTab === 'complaints'">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+          <h3 class="text-lg font-bold text-gray-900">Global Maintenance Complaint Feed</h3>
+          <button (click)="loadAllComplaints()" class="text-xs font-bold text-indigo-600 hover:underline">
+            Refresh Complaints
+          </button>
+        </div>
+
+        <div *ngIf="isLoadingComplaints" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-indigo-600 border-t-transparent"></div>
+        </div>
+
+        <div *ngIf="!isLoadingComplaints && complaints.length === 0" class="p-12 text-center">
+          <p class="text-gray-500 font-medium">No complaints logged yet.</p>
+        </div>
+
+        <div *ngIf="!isLoadingComplaints && complaints.length > 0" class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">ID</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Student</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Location</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Title</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Urgency</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr *ngFor="let complaint of complaints" class="hover:bg-gray-50/50 transition">
+                <td class="px-6 py-4 text-sm font-bold text-indigo-600 font-mono">{{ complaint.complaintId }}</td>
+                <td class="px-6 py-4 text-sm font-semibold text-gray-800">
+                  {{ complaint.studentId?.fullName || 'N/A' }}
+                </td>
+                <td class="px-6 py-4 text-sm font-semibold text-gray-700">
+                  Block {{ complaint.location.block }}, Room {{ complaint.location.roomNumber }}
+                </td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-900 truncate max-w-xs">{{ complaint.title }}</td>
+                <td class="px-6 py-4 text-sm text-gray-500 font-semibold">{{ complaint.category | titlecase }}</td>
+                <td class="px-6 py-4 text-sm">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    [class]="complaint.urgency === 'emergency' ? 'bg-red-100 text-red-800' :
+                             complaint.urgency === 'high' ? 'bg-orange-100 text-orange-800' :
+                             complaint.urgency === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                             'bg-green-100 text-green-800'">
+                    {{ complaint.urgency | titlecase }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-bold" [class]="getStatusColor(complaint.status)">
+                    {{ complaint.status.replace('_', ' ') | titlecase }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 text-sm">
+                  <button
+                    (click)="viewComplaintDetails(complaint._id)"
+                    class="text-indigo-600 hover:text-indigo-800 font-bold transition"
+                  >
+                    View →
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>

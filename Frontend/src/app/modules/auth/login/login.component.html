@@ -1,0 +1,118 @@
+<div class="min-h-[calc(100vh-5rem)] bg-gradient-to-tr from-indigo-50 via-gray-50 to-violet-100 flex items-center justify-center p-4 font-sans">
+  
+  <!-- Main Premium Box -->
+  <div class="bg-white/80 backdrop-blur-md rounded-3xl shadow-xl border border-white/40 w-full max-w-md p-6 sm:p-10 relative overflow-hidden transition-all duration-300">
+    <div class="absolute -top-10 -right-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-violet-500/10 rounded-full blur-3xl"></div>
+
+    <!-- Brand Header -->
+    <div class="text-center mb-8 relative z-10">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white mx-auto shadow-md shadow-indigo-150 mb-3">
+        <span class="text-2xl font-black">H</span>
+      </div>
+      <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Welcome Back</h1>
+      <p class="text-gray-500 text-sm font-medium mt-1">Smart Maintenance Portal</p>
+    </div>
+
+    <!-- Login Form -->
+    <form (ngSubmit)="login()" class="space-y-5 relative z-10">
+      
+      <!-- Role Selection Dropdown -->
+      <div>
+        <label for="role" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+          Access Portal As
+        </label>
+        <select
+          id="role"
+          [(ngModel)]="role"
+          name="role"
+          class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+        >
+          <option value="student">🎓 Student Portal</option>
+          <option value="warden">👨‍🏫 Teacher / Officer Portal</option>
+          <option value="technician">🔧 Maintenance Staff Portal</option>
+          <option value="admin">🛡 Admin Console</option>
+        </select>
+      </div>
+
+      <!-- Email Address Input -->
+      <div>
+        <label for="loginEmail" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+          Email Address
+        </label>
+        <input
+          id="loginEmail"
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          placeholder="your@school.com"
+          class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold"
+          required
+        />
+      </div>
+
+     <!-- Password Input -->
+<div>
+  <label for="loginPassword" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+    Password
+  </label>
+  <div class="relative">
+    <input
+      id="loginPassword"
+      [type]="showPassword ? 'text' : 'password'"
+      [(ngModel)]="password"
+      name="password"
+      placeholder="••••••••"
+      class="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold pr-12"
+      required
+    />
+    <!-- Eye Toggle Button -->
+    <button
+      type="button"
+      (click)="togglePassword()"
+      class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-indigo-500 focus:outline-none"
+    >
+      <!-- Eye Open (password hidden) -->
+      <svg *ngIf="!showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      </svg>
+      <!-- Eye Closed (password visible) -->
+      <svg *ngIf="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.97 9.97 0 012.047-3.268M9.88 9.88a3 3 0 104.243 4.243M3 3l18 18" />
+      </svg>
+    </button>
+  </div>
+</div>
+
+      <!-- Alert Error -->
+      <div *ngIf="errorMessage" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-xs font-medium animate-pulse">
+        ⚠️ {{ errorMessage }}
+      </div>
+
+      <!-- Submit Trigger -->
+      <button
+        type="submit"
+        [disabled]="isLoading"
+        class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:bg-gray-300 text-white font-bold text-sm rounded-xl shadow-md shadow-indigo-100 hover:shadow transition duration-200"
+      >
+        {{ isLoading ? 'Signing you in...' : 'Sign In' }}
+      </button>
+
+    </form>
+
+    <!-- Redirect Links -->
+    <p class="text-center text-sm font-semibold text-gray-500 mt-6 relative z-10">
+      New user?
+      <a routerLink="/auth/register" class="text-indigo-600 hover:underline font-bold">
+        Create an account
+      </a>
+    </p>
+
+  </div>
+</div>
